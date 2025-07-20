@@ -3,6 +3,10 @@
   margin-bottom: 2rem;
 }
 
+#lebenslauf{
+  scroll-margin-top: 20vh;
+}
+
 /* Done */
 .timeline::after {
   content: '';                /* Done */

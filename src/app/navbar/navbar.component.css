@@ -3,35 +3,63 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0vw 5vw 0vw 5vw;
+    padding: 0vw 5vw;
     position: fixed;
     z-index: 1000;
+    height: 8vh;
 }
 
-.me{
+.me {
     color: white;
+    text-decoration: none;
 }
 
-.socialMedia{
-    width: 40%;
+/* Neuer Wrapper für rechts */
+.rightSection {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
 }
 
-.socialMedia *{
+/* Icons links von den Menüpunkten mit 2rem Abstand */
+.images {
+    display: flex;
+    align-items: center;
+    margin-right: 2rem;
+    gap: 0.5rem;
+}
+
+.images img {
+    height: 35px;
+}
+
+.socialMedia {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.socialMedia * {
     color: white;
     font-size: medium;
     text-decoration: none;
 }
 
-.burgerMenue{
+.burgerMenue {
     display: none;
 }
+
+/* RESPONSIVE: Trenne images & socialMedia */
 @media (max-width: 950px) {
-    .burgerMenue{
+    .rightSection {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .burgerMenue {
         display: block;
     }
-    .socialMedia{
+
+    .menueItem {
         display: none;
     }
 }
