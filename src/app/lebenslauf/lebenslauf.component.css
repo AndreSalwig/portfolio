@@ -1,0 +1,50 @@
+.timeline{
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+/* Done */
+.timeline::after {
+  content: '';                /* Done */
+  position: absolute;         /* Done */
+  width: 10px;                 /* Done */
+  background-color: white;  /* Done */
+  top: 0;                     /* Done */
+  bottom: 0;                  /* Done */
+  left: 50%;                  /* Done */
+  margin-left: -5px;          /* Done */
+  border-radius: 1rem;
+}
+
+
+.timeline-item {
+  position: relative;
+  width: 25%;
+  padding: 1rem;
+  background: white;
+  margin: 2rem 0;
+  color: black;
+  border-radius: 2rem;
+  box-sizing: border-box;
+}
+
+.left {
+  left: 20%;
+  text-align: right;
+}
+
+.right {
+  left: 55%;
+}
+
+.content{
+ text-align: center;
+}
+
+.timeline:first-child{
+  padding-top: 1rem;
+}
+
+.timeline:last-child{
+  padding-bottom: 1rem;
+}
