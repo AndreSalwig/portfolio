@@ -3,4 +3,11 @@
         <h1>Willkommen in meiner Welt</h1>
         <p>Entdecke meinen Weg und was ich geschaffen habe</p>
     </div>
+    <div class="terminal">
+    <div *ngFor="let line of outputLines">{{ line }}</div>
+        <div>
+            <span class="prompt">$</span>
+            <input [(ngModel)]="input" (keydown.enter)="handleCommand()" autofocus />
+        </div>
+    </div>
 </section>

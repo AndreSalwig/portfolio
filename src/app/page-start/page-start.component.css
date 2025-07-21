@@ -11,3 +11,26 @@
   padding-top: 30vh;
   z-index: 1;
 }
+
+.terminal {
+  font-family: monospace;
+  background-color: rgba(0, 0, 0, 0.8);
+  padding: 1rem;
+  color: #00ff00;
+  max-width: 600px;
+  margin: 100px auto;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.prompt {
+  margin-right: 0.5rem;
+}
+
+input {
+  background: none;
+  border: none;
+  outline: none;
+  color: #00ff00;
+  width: 90%;
+}
