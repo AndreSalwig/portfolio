@@ -17,7 +17,7 @@ export class MatrixBackgroundComponent implements AfterViewInit {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    const letters = 'アカサタナハマヤラワ0123456789ABCDEF'.split('');
+    const letters = 'アカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
     const fontSize = 14;
     const columns = canvas.width / fontSize;
     const drops: number[] = new Array(Math.floor(columns)).fill(1);
