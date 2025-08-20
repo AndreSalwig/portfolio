@@ -20,22 +20,24 @@ export class TypewriterComponent implements AfterViewInit {
   @ViewChild('textRef', { static: true }) textRef!: ElementRef;
 
   private hasAnimated = false;
+  private isAnimating = false;
+  private typingInterval: any; // <--- Referenz auf Interval speichern
 
   ngAfterViewInit() {
     const target = this.textRef.nativeElement as HTMLElement;
 
     const observer = new IntersectionObserver(
-      (entries, observer) => {
+      (entries) => {
         entries.forEach(entry => {
-          if (entry.isIntersecting && !this.hasAnimated) {
+          if (entry.isIntersecting && !this.hasAnimated && !this.isAnimating) {
             if (entry.intersectionRatio >= 0.1) {
               this.startTyping(target);
               this.hasAnimated = true;
             }
           }
-          if (!entry.isIntersecting){
+          if (!entry.isIntersecting && this.hasAnimated && !this.isAnimating) {
             this.hasAnimated = false;
-            target.textContent = "";
+            target.textContent = '';
           }
         });
       },
@@ -48,13 +50,17 @@ export class TypewriterComponent implements AfterViewInit {
   }
 
   private startTyping(element: HTMLElement) {
+    this.isAnimating = true;
     let i = 0;
-    const interval = setInterval(() => {
+    element.textContent = '';
+
+    this.typingInterval = setInterval(() => {
       if (i < this.text.length) {
         element.textContent += this.text.charAt(i);
         i++;
       } else {
-        clearInterval(interval);
+        clearInterval(this.typingInterval);
+        this.isAnimating = false;
       }
     }, this.speed);
   }
