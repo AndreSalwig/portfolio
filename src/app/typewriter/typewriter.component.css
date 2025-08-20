@@ -1,0 +1,15 @@
+.typewriter-cursor {
+  font-family: monospace;
+  font-size: 2em;
+  border-right: 0.15em solid #00ff00;
+  white-space: nowrap;
+  overflow: hidden;
+  display: inline-block;
+  animation: blink 0.75s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+    border-color: transparent;
+  }
+}
