@@ -1,36 +1,51 @@
 <div id="lebenslauf" class="timeline">
   <div class="timeline-item left">
-    <div class="content">
+    <div class="content" (click)="showInformatikInfo = !showInformatikInfo">
       <h3>Juli 2022 - Heute</h3>
       <p>Duales Studium Informatik an der FH Dortmund</p>
+       <p *ngIf="showInformatikInfo">
+        hallo hier ist ein text
+      </p>
     </div>
   </div>
 
   <div class="timeline-item right">
-    <div class="content">
+    <div class="content" (click)="showSignalIdunaInfo = !showSignalIdunaInfo">
       <h3>Juli 2022 - Juli 2025</h3>
       <p>Ausbildung bei der SIGNAL IDUNA zum <br> Fachinformatiker für Anwendungsentwicklung</p>
+       <p *ngIf="showSignalIdunaInfo">
+        hallo hier ist ein text
+      </p>
     </div>
   </div>
 
   <div class="timeline-item left">
-    <div class="content">
+    <div class="content" (click)="showSupervisorInfo = !showSupervisorInfo">
       <h3>Mai 2020 - Heute</h3>
       <p>Supervisor/Schichtleitung im Superfly Dortmund <br> 2020 - 2022 in Vollzeit <br> 2022 - Heute als Minijob</p>
+      <p *ngIf="showSupervisorInfo">
+        hallo hier ist ein text
+      </p>
     </div>
   </div>
 
   <div class="timeline-item right">
-    <div class="content">
+    <div class="content" (click)="showMechatronikInfo = !showMechatronikInfo">
       <h3>September 2016 - März 2020</h3>
       <p>Studium Mechatronik an der FH Bochum <br> Coronabedingt abgebrochen</p>
+       <p *ngIf="showMechatronikInfo">
+        hallo hier ist ein text
+      </p>
     </div>
   </div>
 
   <div class="timeline-item left">
-    <div class="content">
+    <div class="content" (click)="showAbiInfo = !showAbiInfo">
       <h3>August 2013 - Juni 2016</h3>
       <p>Fachabitur mit der Vertiefung Elektrotechnik am <br> Max Born Berufskolleg in Recklinghausen </p>
+       <p *ngIf="showAbiInfo">
+        hallo hier ist ein text
+      </p>
     </div>
   </div>
 </div>
