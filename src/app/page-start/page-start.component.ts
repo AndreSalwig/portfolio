@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LebenslaufComponent } from '../lebenslauf/lebenslauf.component';
 
 @Component({
   selector: 'app-page-start',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, LebenslaufComponent],
   templateUrl: './page-start.component.html',
   styleUrl: './page-start.component.css'
 })
@@ -31,6 +32,7 @@ export class PageStartComponent {
         break;
       case 'lebenslauf':
         this.outputLines.push('Ahh... wo war ich nochmal in der Grundschule?');
+        LebenslaufComponent.toggleGrundschule();
          setTimeout(() => {
           this.scrollToSection('lebenslauf');
         }, 1500);
