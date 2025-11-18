@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LebenslaufComponent } from '../lebenslauf/lebenslauf.component';
 
 @Component({
   selector: 'app-page-start',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, LebenslaufComponent],
   templateUrl: './page-start.component.html',
   styleUrl: './page-start.component.css'
 })
@@ -20,17 +21,18 @@ export class PageStartComponent {
 
     switch (command) {
       case 'help':
-        this.outputLines.push('Verfügbare Befehle: help, aboutme, lebenslauf, kontakt. Maybe more :D');
+        this.outputLines.push('Verfügbare Befehle: help, aboutme, lebenslauf, kontakt, geheimnis. Maybe more :D');
         break;
       case 'aboutme':
         this.outputLines.push('Lets gooo...');
         setTimeout(() => {
           this.scrollToSection('aboutMe');
         }, 1000);
-  
+
         break;
       case 'lebenslauf':
         this.outputLines.push('Ahh... wo war ich nochmal in der Grundschule?');
+        LebenslaufComponent.toggleGrundschule();
          setTimeout(() => {
           this.scrollToSection('lebenslauf');
         }, 1500);
@@ -43,6 +45,10 @@ export class PageStartComponent {
         break;
       case 'sudo make me a sandwich':
         this.outputLines.push('Okay. 🍔');
+        break;
+      case 'geheimnis':
+        this.outputLines.push('Das Geheimnis ist... dass es kein Geheimnis gibt! 🎉');
+        window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         break;
       default:
         this.outputLines.push('Was zur Hölle ???');
