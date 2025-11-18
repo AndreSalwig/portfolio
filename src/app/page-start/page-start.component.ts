@@ -20,14 +20,14 @@ export class PageStartComponent {
 
     switch (command) {
       case 'help':
-        this.outputLines.push('Verfügbare Befehle: help, aboutme, lebenslauf, kontakt. Maybe more :D');
+        this.outputLines.push('Verfügbare Befehle: help, aboutme, lebenslauf, kontakt, geheimnis. Maybe more :D');
         break;
       case 'aboutme':
         this.outputLines.push('Lets gooo...');
         setTimeout(() => {
           this.scrollToSection('aboutMe');
         }, 1000);
-  
+
         break;
       case 'lebenslauf':
         this.outputLines.push('Ahh... wo war ich nochmal in der Grundschule?');
@@ -43,6 +43,10 @@ export class PageStartComponent {
         break;
       case 'sudo make me a sandwich':
         this.outputLines.push('Okay. 🍔');
+        break;
+      case 'geheimnis':
+        this.outputLines.push('Das Geheimnis ist... dass es kein Geheimnis gibt! 🎉');
+        window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         break;
       default:
         this.outputLines.push('Was zur Hölle ???');
