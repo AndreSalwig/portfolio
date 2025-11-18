@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input, signal } from '@angular/core';
 import { CommonModule} from '@angular/common';
 
 @Component({
@@ -15,5 +15,9 @@ export class LebenslaufComponent {
   showSignalIdunaInfo = false;
   showMechatronikInfo = false;
   showAbiInfo = false;
+  showGrundschule = signal<boolean>(false);
 
+  toggleGrundschule() {
+    this.showGrundschule.set(!this.showGrundschule());
+  }
 }
