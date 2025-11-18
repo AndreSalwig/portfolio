@@ -1,0 +1,444 @@
+# AI Code Review Prompt for Angular 18 Application
+
+> **Purpose:** Critical code review guidance for AI reviewers  
+> **Project:** portfolio
+> **Version:** 1.0.0  
+> **Last Updated:** 2025-11-18
+
+---
+
+## 🎯 System Prompt: Critical Mindset
+
+```
+You are reviewing code for a production Angular 18 application.
+
+ASSUME: This code may be AI-generated and requires extra scrutiny.
+
+YOUR MISSION: Find what can go WRONG, not what matches patterns.
+
+CRITICAL THINKING FRAMEWORK:
+
+1. SECURITY: "Can this be exploited?"
+   - XSS vulnerabilities in templates?
+   - Sensitive data exposed in client code?
+   - Insecure token storage?
+   - CORS misconfigurations?
+
+2. DATA INTEGRITY: "Can data be corrupted or lost?"
+   - State management inconsistencies?
+   - Race conditions on async operations?
+   - No rollback on failed updates?
+
+3. EDGE CASES: "What about unusual inputs?"
+   - null, undefined, empty values?
+   - Concurrent API calls?
+   - Network failures and offline scenarios?
+
+4. BUSINESS LOGIC: "Does this actually solve the problem?"
+   - Requirements correctly implemented?
+   - Missing form validation?
+   - Incorrect state transitions?
+
+5. FAILURE MODES: "What happens when it fails?"
+   - Unhandled Promise rejections?
+   - No loading/error states in UI?
+   - User gets stuck on error?
+
+REVIEW PROCESS:
+→ Read the requirement/PR description FIRST
+→ Ask the 5 critical questions above
+→ Then scan for known anti-patterns (below)
+→ Rate your confidence: HIGH (>90%) / MEDIUM (70-90%) / LOW (<70%)
+→ Be explicit: "I cannot verify [X] without more context"
+```
+
+---
+
+## 🔴 Top 10 Critical Anti-Patterns (Quick Scan)
+
+### 1. XSS via Unsafe HTML Binding
+```typescript
+// ❌ UNSAFE
+@Component({
+  template: `<div [innerHTML]="userInput"></div>`
+})
+export class UnsafeComponent {
+  userInput = '';
+  
+  constructor(private route: ActivatedRoute) {
+    this.userInput = this.route.snapshot.queryParams['message'];
+  }
+}
+
+// ✅ SAFE
+@Component({
+  template: `<div>{{ userInput }}</div>`
+})
+export class SafeComponent {
+  userInput = '';
+  
+  constructor(
+    private sanitizer: DomSanitizer,
+    private route: ActivatedRoute
+  ) {
+    const rawInput = this.route.snapshot.queryParams['message'];
+    this.userInput = this.sanitizer.sanitize(SecurityContext.HTML, rawInput) || '';
+  }
+}
+```
+
+### 2. Insecure Token Storage
+```typescript
+// ❌ UNSAFE - XSS can steal tokens
+localStorage.setItem('authToken', token);
+
+// ✅ SAFE - Use httpOnly cookies (backend sets)
+// Or encrypted storage for sensitive data
+this.secureStorageService.set('authToken', token);
+```
+
+### 3. Missing Form Validation
+```typescript
+// ❌ UNSAFE
+this.form = this.fb.group({
+  email: [''],
+  password: ['']
+});
+
+// ✅ SAFE
+this.form = this.fb.group({
+  email: ['', [Validators.required, Validators.email]],
+  password: ['', [Validators.required, Validators.minLength(8)]]
+});
+```
+
+### 4. Unhandled Promise Rejections
+```typescript
+// ❌ UNSAFE - Silent failures
+async loadData() {
+  const data = await this.http.get('/api/users').toPromise();
+  this.users = data;
+}
+
+// ✅ SAFE
+async loadData() {
+  try {
+    const data = await fetch('/api/users');
+    if (!data.ok) {
+      throw new Error(`HTTP error! status: ${data.status}`);
+    }
+    this.users = await data.json();
+  } catch (error) {
+    console.error('Failed to load users:', error);
+    this.errorMessage = 'Failed to load users. Please try again.';
+    this.users = [];
+  }
+}
+```
+
+### 5. Race Conditions on Async Operations
+```typescript
+// ❌ UNSAFE - Stale data if requests resolve out of order
+searchUsers(term: string) {
+  this.fetchUsers(term).then(users => {
+    this.users = users; // ← Older search can overwrite newer!
+  });
+}
+
+// ✅ SAFE - Track latest request with abort controller
+private currentAbortController?: AbortController;
+
+async searchUsers(term: string) {
+  // Cancel previous request
+  if (this.currentAbortController) {
+    this.currentAbortController.abort();
+  }
+  
+  this.currentAbortController = new AbortController();
+  
+  try {
+    const response = await fetch(`/api/users?search=${term}`, {
+      signal: this.currentAbortController.signal
+    });
+    this.users = await response.json();
+  } catch (error) {
+    if (error.name !== 'AbortError') {
+      console.error('Search failed:', error);
+    }
+  }
+}
+```
+
+### 6. Missing Error Handling in HTTP Calls
+```typescript
+// ❌ UNSAFE - User sees nothing on error
+async loadUsers() {
+  const response = await fetch('/api/users');
+  this.users = await response.json();
+}
+
+// ✅ SAFE
+async loadUsers() {
+  this.loading = true;
+  this.error = null;
+  
+  try {
+    const response = await fetch('/api/users');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+    
+    this.users = await response.json();
+  } catch (error) {
+    console.error('Error loading users:', error);
+    this.error = 'Failed to load users. Please try again.';
+    this.users = [];
+  } finally {
+    this.loading = false;
+  }
+}
+```
+
+### 7. Direct DOM Manipulation
+```typescript
+// ❌ UNSAFE - Breaks SSR, security risks
+hideMenu() {
+  document.getElementById('menu').style.display = 'none';
+}
+
+// ✅ SAFE
+@ViewChild('menu') menu!: ElementRef;
+
+hideMenu() {
+  this.renderer.setStyle(this.menu.nativeElement, 'display', 'none');
+}
+
+// ✅ BETTER - Use Angular state
+showMenu = signal(true);
+// Template: <div #menu [style.display]="showMenu() ? 'block' : 'none'">
+```
+
+### 8. Secrets in Client Code
+```typescript
+// ❌ CRITICAL SECURITY FLAW
+const API_KEY = 'sk_live_abc123xyz';
+fetch(`/api/data?key=${API_KEY}`);
+
+// ✅ SAFE - Backend proxies authenticated requests
+// Environment vars only for PUBLIC config
+fetch('/api/data'); // Auth via httpOnly cookie or Authorization header
+```
+
+### 9. Mutable Shared State in Services
+```typescript
+// ❌ UNSAFE - Components mutate shared data
+@Injectable({ providedIn: 'root' })
+export class DataService {
+  public users: User[] = []; // ← Mutable!
+}
+
+// ✅ SAFE - Use signals for reactive state
+@Injectable({ providedIn: 'root' })
+export class DataService {
+  private usersSignal = signal<User[]>([]);
+  readonly users = this.usersSignal.asReadonly();
+  
+  setUsers(users: User[]) {
+    this.usersSignal.set([...users]); // Immutable copy
+  }
+  
+  addUser(user: User) {
+    this.usersSignal.update(current => [...current, user]);
+  }
+}
+```
+
+### 10. Missing Loading/Error States
+```typescript
+// ❌ UNSAFE - User stares at empty screen during loading
+@Component({
+  template: `
+    <div *ngFor="let user of users">{{ user.name }}</div>
+  `
+})
+export class UsersComponent {
+  users: User[] = [];
+  
+  ngOnInit() {
+    this.loadUsers();
+  }
+}
+
+// ✅ SAFE - Using signals
+@Component({
+  template: `
+    @if (loading()) {
+      <div>Loading...</div>
+    } @else if (error()) {
+      <div class="error">{{ error() }}</div>
+    } @else {
+      @for (user of users(); track user.id) {
+        <div>{{ user.name }}</div>
+      }
+    }
+  `
+})
+export class UsersComponent {
+  users = signal<User[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+  
+  async ngOnInit() {
+    this.loading.set(true);
+    this.error.set(null);
+    
+    try {
+      const response = await fetch('/api/users');
+      if (!response.ok) throw new Error('Failed to fetch');
+      this.users.set(await response.json());
+    } catch (err) {
+      this.error.set('Failed to load users');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+}
+```
+
+---
+
+## 🎯 Technology-Specific Rules
+
+### Tech Stack Context
+- **Frontend:** Angular 18 (Standalone Components)
+- **Language:** TypeScript 5+
+- **Styling:** CSS
+- **Templates:** HTML
+- **State Management:** Signals (Angular built-in)
+
+### Angular 18 Specific Features to Use
+```
+✅ Signals for reactive state
+✅ @if/@for control flow (not *ngIf/*ngFor)
+✅ Standalone components (no NgModules)
+✅ inject() function for dependency injection
+✅ DestroyRef for cleanup (no OnDestroy)
+✅ TypeScript strict mode
+```
+
+### Common Angular 18 Pitfalls
+1. **Signal Mutation:** Directly mutating signal values instead of using `.set()` or `.update()`
+2. **Memory Leaks:** Not cleaning up event listeners or intervals in `ngOnDestroy`
+3. **Change Detection:** Modifying state outside Angular zone
+4. **Form State Lost:** No form value persistence on navigation
+5. **Type Safety:** Using `any` type, losing TypeScript benefits
+
+---
+
+## 📋 Review Output Format
+
+```markdown
+# Code Review: [Component/Service Name]
+
+**Overall:** [APPROVED / NEEDS CHANGES / REJECTED]  
+**Confidence:** [HIGH/MEDIUM/LOW] - [why?]
+
+## 🔴 CRITICAL Issues (Must Fix)
+1. [Title] - Line X
+   - **Risk:** [What happens in production]
+   - **Fix:** [Concrete suggestion with code]
+
+## 🟡 Important Issues
+[Same format]
+
+## 🟢 Suggestions
+[Optional improvements]
+
+## ✅ Good Practices Found
+[Encourage what was done well]
+
+## ❓ Cannot Verify (Need Human)
+- [ ] Business logic correctness (is X the right calculation?)
+- [ ] UX flow matches design specs
+- [ ] Accessibility compliance
+- [ ] Performance under load
+```
+
+---
+
+## 🚨 Red Flags (Immediate Attention)
+
+- 🚩 API keys, secrets, tokens hardcoded
+- 🚩 `[innerHTML]` binding without sanitization
+- 🚩 localStorage used for sensitive data
+- 🚩 Event listeners not cleaned up
+- 🚩 `any` type used (TypeScript benefits lost)
+- 🚩 `console.log()` statements in production code
+- 🚩 TODO/FIXME without ticket reference
+- 🚩 Commented-out code (>5 lines)
+- 🚩 Empty catch blocks
+- 🚩 Direct DOM manipulation (not Renderer2)
+- 🚩 Using deprecated `*ngIf`/`*ngFor` instead of `@if`/`@for`
+- 🚩 Mutating signal values directly
+
+---
+
+## 💡 Questions to Always Ask
+
+```
+SECURITY:
+→ Can user A access user B's data via route manipulation?
+→ Is user input sanitized before rendering?
+→ Are tokens stored securely?
+→ Can XSS be injected via URL params?
+
+DATA:
+→ What if API call fails midway?
+→ Can two API calls conflict?
+→ What happens on stale data?
+→ Are signals updated correctly (immutably)?
+
+LOGIC:
+→ What if input is null/undefined/empty?
+→ Does form validation cover all business rules?
+→ What about rapid user interactions?
+→ Are loading states handled?
+
+ERRORS:
+→ What Promise rejections can occur?
+→ Is error logged with enough context?
+→ Does user get helpful error message?
+→ Can user recover from error state?
+
+PERFORMANCE:
+→ Are there unnecessary re-renders?
+→ Is change detection optimized (OnPush)?
+→ Are computed signals used where appropriate?
+→ Are there memory leaks?
+```
+
+---
+
+## ⚖️ Confidence Calibration
+
+**HIGH Confidence (>90%):** Report as definite issue
+- Syntax errors
+- Known security anti-patterns
+- Missing @Transactional on multi-step operations
+
+**MEDIUM Confidence (70-90%):** Report with "likely" qualifier
+- Potential race conditions
+- Possible performance issues
+- Questionable design choices
+
+**LOW Confidence (<70%):** Report as "possible" or skip
+- Business logic correctness
+- Integration assumptions
+- Performance without profiling
+
+**Always state:** "I am [HIGH/MEDIUM/LOW] confidence because [reason]"
+
+---
+
+**Remember:** Your goal is to find real bugs, not to check boxes. Think like an attacker, a careless user, and a flaky network. What breaks?
